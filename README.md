@@ -1,4 +1,4 @@
-# Restoring wikk
+# Restoring Mediawiki
 
 This is to test the mediawiki dumps from the hosting service.
 
@@ -8,7 +8,7 @@ This is to test the mediawiki dumps from the hosting service.
   - Download sql dump and untar it
     - mv geneontology_mediawiki-xxxx.sql sqldumps/
   - cp stack.yaml.sample to stack.yaml
-    - stack.yaml contains the my root password. You can modify this to your liking if needed.
+    - stack.yaml contains the mysql root password. You can modify this to your liking if needed.
   - cp sqldumps/user.sql.sample sqldumps/user.sql
 
 ## Modify wikidumps/www/LocalSettings.php 
