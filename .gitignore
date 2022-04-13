@@ -2,5 +2,6 @@
 *.yaml
 *.yml
 *.gz
+*.php
 www
 mysql_data_dir
