@@ -1,4 +1,4 @@
-# Restoring wikk
+# Restoring Mediawiki
 
 This is to test the mediawiki dumps from the hosting service.
 
