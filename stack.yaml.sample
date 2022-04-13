@@ -1,0 +1,25 @@
+version: '3.7'
+services:
+  go-wiki:
+    image: mediawiki:1.37.1
+    container_name: go-wiki
+    hostname: go-wiki 
+    ports:
+      - 8080:80
+    volumes:
+      -  ./wikidumps/www:/var/www/html
+    init: true
+    restart: unless-stopped
+
+  go-wiki-db:
+    image: mysql:5.7
+    container_name: go-wiki-db
+    hostname: go-wiki-db
+    volumes:
+      - ./sqldumps:/docker-entrypoint-initdb.d
+      - ./mysql_data_dir:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: geneontology_mediawiki 
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+    init: true
+    restart: unless-stopped

@@ -1,0 +1,6 @@
+*.sql
+*.yaml
+*.yml
+*.gz
+www
+mysql_data_dir
