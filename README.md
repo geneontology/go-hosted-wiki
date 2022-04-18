@@ -21,6 +21,7 @@ This is to test the mediawiki dumps from the hosting service.
 - Ready docker environment
   - `cp ./stack.yaml.sample ./stack.yaml`
 	- `stack.yaml` contains the mysql root password that we'll be forcing in our environment--MYSQL\_ROOT\_PASSWORD--you can modify this to your liking if needed; to match this example, one would change it to "mypass"
+	- On unix uncomment the user attribute in `stack.yaml` and replace it with the proper uid and gid of the user on the host machine
   - `cp ./sqldumps/user.sql.sample ./sqldumps/user.sql`
 	- similarly, `user.sql` contains the mysql user that we'll be forcing in our environment; you can modify this to your liking if needed; to match this example, one would not need to change anything
 
