@@ -24,6 +24,7 @@ This is to test the mediawiki dumps from the hosting service.
 	- `stack.yaml` contains the mysql root password that we'll be forcing in our environment--MYSQL\_ROOT\_PASSWORD--you can modify this to your liking if needed; to match this example, one would change it to "mypass"
 	- On unix replace the user attribute in `stack.yaml`with the proper uid and gid of the user on the host machine
 	- On mac be sure to delete the user attribute in `stack.yaml`
+        - Port 8080 is exposed by default modify it if need be in `stack.yaml`.
   - `cp ./sqldumps/user.sql.sample ./sqldumps/user.sql`
 	- similarly, `user.sql` contains the mysql user that we'll be forcing in our environment; you can modify this to your liking if needed; to match this example, one would not need to change anything
 
@@ -42,7 +43,8 @@ Modify these variables in LocalSettings.php to match what you want and what was 
 
 The steps below  will launch the mediawiki and mysql containers. The first time the mysql container is launched,
 it will execute the sql scripts in sqldumps directory. When stack is ready, the wiki can be accessed at
-http://localhost:8080.
+http://{host-ip}:{exposed-port} or http://localhost:8080 if testing locally and did not modify the exposes port
+in `stack.yaml`
 
 ```
 docker-compose -f stack.yaml up -d
