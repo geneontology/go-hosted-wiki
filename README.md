@@ -16,6 +16,7 @@ This is to test the mediawiki dumps from the hosting service.
 	- (Assuming downloads from above in /tmp/foo)
 	- `tar -zxvf mysql5.tar.gz` should produce a file like `geneontology_mediawiki-2138-1649973677.sql`
 	- `tar -zxvf files.tar.gz` should produce a file tree starting at `/tmp/foo/home/`
+	- Be in cloned `go-hosted-wiki`
     - `mv /tmp/foo/home/geneontology/www/www ./wikidumps/`
     - `mv /tmp/foo/geneontology_mediawiki-xxxx.sql ./sqldumps/`
 - Ready docker environment
