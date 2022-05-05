@@ -6,3 +6,8 @@
 *.php
 www
 mysql_data_dir
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+home
