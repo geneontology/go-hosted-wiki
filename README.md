@@ -22,7 +22,7 @@ This is to test the mediawiki dumps from the hosting service.
   - `cp ./stack.yaml.sample ./stack.yaml`
 	- `stack.yaml` contains the mysql root password that we'll be forcing in our environment--MYSQL\_ROOT\_PASSWORD--you can modify this to your liking if needed; to match this example, one would change it to "mypass"
 	- On unix replace the user attribute in `stack.yaml`with the proper uid and gid of the user on the host machine
-        - On mac be sure to comment or delete the user line in stack.yaml. 
+	- On mac be sure to delete the user attribute in `stack.yaml`
   - `cp ./sqldumps/user.sql.sample ./sqldumps/user.sql`
 	- similarly, `user.sql` contains the mysql user that we'll be forcing in our environment; you can modify this to your liking if needed; to match this example, one would not need to change anything
 
