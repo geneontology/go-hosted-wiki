@@ -43,7 +43,7 @@ Modify these variables in LocalSettings.php to match what you want and what was 
 
 The steps below  will launch the mediawiki and mysql containers. The first time the mysql container is launched,
 it will execute the sql scripts in sqldumps directory. When stack is ready, the wiki can be accessed at
-http://{host-ip}:{exposed-port} or http://localhost:8080 if testing locally and did not modify the exposes port
+http://{host-ip}:{exposed-port} or http://localhost:8080 if testing locally and did not modify the exposed port
 in `stack.yaml`
 
 ```
