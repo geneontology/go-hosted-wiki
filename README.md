@@ -28,12 +28,13 @@ This is to test the mediawiki dumps from the hosting service.
   - `cp ./sqldumps/user.sql.sample ./sqldumps/user.sql`
 	- similarly, `user.sql` contains the mysql user that we'll be forcing in our environment; you can modify this to your liking if needed; to match this example, one would not need to change anything
 
-## Modify wikidumps/www/LocalSettings.php
+## Modify LocalSettings.php
 
-Modify these variables in LocalSettings.php to match what you want and what was defined above in `stack.yaml` and `users.sql`.
+Modify these variables in `wikidumps/www/LocalSettings.php` to match what you want and what was defined above in `stack.yaml` and `users.sql`.
 
 - $wgServer = "http://your-host-or-ip:8080";
-  - On mac this is the ip for en0; on other systems, maybe a mock listing in /etc/hosts, like test.wiki.com.
+  - On mac, this is the ip for en0; on other systems, maybe a mock listing in /etc/hosts, like test.wiki.com.
+  - This seems to sometimes not work so well (YMMV) for localhost and loopbacks, so trying to use a "real" IP or hostname may be preferable.
 - Use credentials in `./sqldumps/user.sql` (or modify both files with a different user and password)
   - $wgDBuser = "myuser";
   - $wgDBpassword = "mypass";
