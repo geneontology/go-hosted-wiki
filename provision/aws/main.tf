@@ -13,7 +13,7 @@ variable "disk_size" {
 }
 
 variable "public_key_path" {
-  default = "~/.ssh/id_rsa.pub"
+  default = "~/SSH/go-ssh.pub"
 }
 
 provider "aws" {
@@ -23,11 +23,11 @@ provider "aws" {
 }
 
 module "base" {
-  source = "git::https://github.com/geneontology/devops-aws-go-instance.git?ref=v1.0"
+  source = "git::https://github.com/geneontology/devops-aws-go-instance.git?ref=V2.0"
   instance_type = var.instance_type
   public_key_path = var.public_key_path
   tags = var.tags
-  open_ports = [80, 22]
+  open_ports = [8080, 80, 22]
   disk_size = var.disk_size
 }
 
