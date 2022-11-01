@@ -23,7 +23,9 @@ cd /tmp
 
 # Handle sql dump
 pattern="\$wgDBpassword"
+set +x
 password=$(cat $LCL_SETTINGS | grep -v "#" | grep $pattern | tail -1 | tr ";\"=" " " | awk '{ print $2; }')
+set -x
 pattern="\$wgDBuser"
 user=$(cat $LCL_SETTINGS | grep -v "#" | grep $pattern | tail -1 | tr ";\"=" " " | awk '{ print $2; }')
 db_dump=$prefix.sql
