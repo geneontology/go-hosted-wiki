@@ -12,6 +12,7 @@ This is to test the mediawiki dumps from the hosting service.
 	- (Wait for backups to be created, may take a few minutes)
 	- Click on "Download backups" tab
 	- Download the created "files.tar.gz" and "mysql5.tar.gz"
+        - [Optionally, for upload to go-wiki-backups, copy or rename: mysql5.tar.gz -> YYYY-MM-DD-manual-mysql5.tar.gz and files.tar.gz -> YYYY-MM-DD-manual-files.tar.gz]
   - Prepare
 	- (Assuming downloads from above in /tmp/foo)
 	- `tar -zxvf mysql5.tar.gz` should produce a file like `geneontology_mediawiki-2138-1649973677.sql`
