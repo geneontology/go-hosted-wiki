@@ -6,8 +6,8 @@ This is to test the mediawiki dumps from the hosting service.
 
 - Download dumps and prepare them
   - Download
-	- Go to "Control Panel"
-	- "Files" -> "Backup"
+	- Go to the Control Panel
+	- Go to "Backup"
 	- Select "Files" and "MySQL 5"; click "Backup now"
 	- (Wait for backups to be created, may take a few minutes)
 	- Click on "Download backups" tab
