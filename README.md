@@ -20,7 +20,7 @@ The documentation "variables" `MYUSER` (mysql user), `MYPASS` (mysql
 user password), and `RPASS` (mysql root user password) are all
 arbitrary. `PATH` is dependent on your environment for any given step.
 
-Network and mysql instance:
+Network and mysql instance; after unpacking files from above:
 
 ```bash
 docker network create mediawiki-network
@@ -28,16 +28,15 @@ docker run -d --name mysql-mediawiki -p 3306:3306 --net mediawiki-network -e MYS
 docker exec -i mysql-mediawiki mysql -u MYUSER -pMYPASS go-wiki-db < /PATH/geneontology_mediawiki-54671-1743530370.sql
 ```
 
-Get files right:
-
-```bash
-chmod -R 777 www
-mg ./www/LocalSettings.php
-```
-
 Use the `docker ps` command to get the container ID of the
 mysql-mediawiki instance. Let's say it's "XYZ".
 
+To get files right; after unpacking files from above:
+
+```bash
+chmod -R 777 home
+mg ./home/geneontology/www/www/LocalSettings.php
+```
 Change the following variables in LocalSettings.php:
 
 ```bash
@@ -49,11 +48,21 @@ $wgDBpassword = "MYPASS";
 
 Get mediawiki up:
 
-```
+```bash
 docker run -d --name mediawiki -p 8081:80 --net mediawiki-network -v /PATH/home/geneontology/www/www:/var/www/html mediawiki
 ```
 
 Can view at: http://localhost:8081 .
+
+To destroy the above setup:
+
+```bash
+docker stop mediawiki
+docker stop mysql-mediawiki
+docker rm mediawiki
+docker rm mysql-mediawiki
+docker network rm mediawiki-network
+```
 
 ## Legacy method
 
