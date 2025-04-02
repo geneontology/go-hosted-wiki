@@ -2,9 +2,9 @@
 
 This is to test the mediawiki dumps from the hosting service.
 
-## Preparation
+## Get data
 
-- Download dumps and prepare them
+- Download dumps and prepare data files
   - Download
 	- Go to the Control Panel
 	- Go to "Backup"
@@ -13,6 +13,50 @@ This is to test the mediawiki dumps from the hosting service.
 	- Click on "Download backups" tab
 	- Download the created "files.tar.gz" and "mysql5.tar.gz"
         - [Optionally, for upload to go-wiki-backups, copy or rename: mysql5.tar.gz -> YYYY-MM-DD-manual-mysql5.tar.gz and files.tar.gz -> YYYY-MM-DD-manual-files.tar.gz]
+
+## Run locally
+
+The documentation "variables" `MYUSER` (mysql user), `MYPASS` (mysql
+user password), and `RPASS` (mysql root user password) are all
+arbitrary. `PATH` is dependent on your environment for any given step.
+
+Network and mysql instance:
+
+```bash
+docker network create mediawiki-network
+docker run -d --name mysql-mediawiki -p 3306:3306 --net mediawiki-network -e MYSQL_ROOT_PASSWORD=RPASS -e MYSQL_DATABASE=go-wiki-db -e MYSQL_USER=MYUSER -e MYSQL_PASSWORD=MYPASS mysql:5.7
+docker exec -i mysql-mediawiki mysql -u MYUSER -pMYPASS go-wiki-db < /PATH/geneontology_mediawiki-54671-1743530370.sql
+```
+
+Get files right:
+
+```bash
+chmod -R 777 www
+mg ./www/LocalSettings.php
+```
+
+Use the `docker ps` command to get the container ID of the
+mysql-mediawiki instance. Let's say it's "XYZ".
+
+Change the following variables in LocalSettings.php:
+
+```bash
+$wgDBserver = "XYZ";
+$wgDBname = "go-wiki-db";
+$wgDBuser = "MYUSER";
+$wgDBpassword = "MYPASS";
+```
+
+Get mediawiki up:
+
+```
+docker run -d --name mediawiki -p 8081:80 --net mediawiki-network -v /PATH/home/geneontology/www/www:/var/www/html mediawiki
+```
+
+Can view at: http://localhost:8081 .
+
+## Legacy method
+
   - Prepare
 	- (Assuming downloads from above in /tmp/foo)
 	- `tar -zxvf mysql5.tar.gz` should produce a file like `geneontology_mediawiki-2138-1649973677.sql`
