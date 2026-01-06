@@ -15,6 +15,7 @@ This is to test the mediawiki dumps from the hosting service.
         - [Optionally, for upload to go-wiki-backups, copy or rename: mysql5.tar.gz -> YYYY-MM-DD-manual-mysql5.tar.gz and files.tar.gz -> YYYY-MM-DD-manual-files.tar.gz]
         - ```mv files.tar.gz `date +%Y-%m-%d`-manual-files.tar.gz```
         - ```mv mysql5.tar.gz `date +%Y-%m-%d`-manual-mysql5.tar.gz```
+- Upload to GO wiki backup archive
 
 
 ## Run locally
