@@ -1,5 +1,9 @@
 # Restoring Mediawiki
 
+> **Before running the manual backup, read [#2](https://github.com/geneontology/go-hosted-wiki/issues/2):**
+> the cron-pushed `wikidump-*` files backups are truncated every month, so the manual
+> backup below is the only complete copy of the wiki files. Keep doing it until #2 is closed.
+
 This is to test the mediawiki dumps from the hosting service.
 
 ## Get data
