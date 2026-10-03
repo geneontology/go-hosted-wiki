@@ -144,8 +144,11 @@ log "start$DRY $prefix"
 # No --single-transaction: the DB holds MyISAM tables (ext_TableEdit_*,
 # searchindex); the default --lock-tables read-locks the whole database for
 # the ~20 s dump, which is consistent across engines and has worked monthly.
+# --no-tablespaces: the account lacks PROCESS, so mysqldump >= 5.7.31 prints an
+# access-denied error for the tablespace query and still exits 0; MediaWiki
+# uses no general tablespaces, so the dump loses nothing.
 sqlkey=sqldump-$prefix.sql.gz
-HOME=$WORK "$MYSQLDUMP" --defaults-file="$MYCNF" --comments --dump-date "$DB" \
+HOME=$WORK "$MYSQLDUMP" --defaults-file="$MYCNF" --no-tablespaces --comments --dump-date "$DB" \
   | "$TEE" >("$TAIL" -c 200 > "$WORK/sql.tail") \
   | "$GZIP" -c \
   | "$TEE" >(wc -c > "$WORK/sql.size") >("$SHA256SUM" | awk '{print $1}' > "$WORK/sql.sum") \
@@ -158,10 +161,12 @@ stream_ok "$sqlkey" "$MIN_SQL_BYTES" "$WORK/sql.size" "$WORK/sql.sum" 2
 sql_size=$size sql_sum=$sum
 
 # --- Wiki files -----------------------------------------------------------
-# Streamed: tar | gzip | tee(count, hash) | s3cmd. Member names stay
-# home/geneontology/www/... as with the old "tar cf x /home/geneontology/www".
+# Streamed: tar | gzip | tee(count, hash) | s3cmd. Absolute path, not
+# "-C /": / and /home are traverse-only (--x) on the host and tar -C must
+# open the directory. tar strips the leading "/" (one stderr notice), so
+# member names stay home/geneontology/www/... as with the old script.
 wikikey=wikidump-$prefix.tar.gz
-"$TAR" cf - -C / "${TOP_LEVEL#/}/www" | "$GZIP" -c \
+"$TAR" cf - "$TOP_LEVEL/www" | "$GZIP" -c \
   | "$TEE" >(wc -c > "$WORK/wiki.size") >("$SHA256SUM" | awk '{print $1}' > "$WORK/wiki.sum") \
   | upload - "$wikikey"
 st=("${PIPESTATUS[@]}")
