@@ -21,8 +21,14 @@
 #       the .ok is the record of the objects, the log of the run. DRYRUN=1
 #       runs every stage but uploads nothing and marks its log lines
 #       "(dryrun)".
-# CAVEAT: never stage a dump on local disk: the account's scratch quota cut
-#       the old on-disk tar off at ~3.3 GiB every month with exit 0.
+# CAVEAT: the panel cron runs every process under a 60 s CPU-time limit
+#       (ulimit -t 60, soft = hard, SIGKILL; measured 2026-10-03). One gzip
+#       over the 2.2 GiB tree needs ~90 s and was killed: that, unchecked, is
+#       what truncated the old script's wikidump every month. So compression
+#       runs as one gzip per CHUNK (split --filter); the members concatenate
+#       into one valid .gz. Any process that must touch the whole stream has
+#       to stay well under 60 s of CPU.
+# CAVEAT: never stage a dump on local disk.
 # CAVEAT: any nonzero tar exit, including 1 ("file changed as we read it"),
 #       fails the run on purpose; none has occurred at the cron hour so far.
 #
@@ -41,6 +47,7 @@ DB=geneontology_mediawiki
 DRYRUN=${DRYRUN:-0}
 MIN_SQL_BYTES=10000000     # the compressed dump is ~88 MB; anything near empty is a failure
 MIN_WIKI_BYTES=500000000   # the compressed files tarball is ~1.66 GB
+CHUNK=256M                 # per-gzip input: ~11 s of CPU each on the host, far under the 60 s limit
 
 # MySQL client credentials live in their own 0600 option file (NOT scraped
 # from LocalSettings.php: PHP quoting and MySQL option-file quoting differ,
@@ -72,7 +79,7 @@ trap 'die "stopped by a signal" 5' TERM HUP INT
 [ -x "$MYSQLDUMP" ] || die "missing executable: $MYSQLDUMP" 1
 # The pipeline tools are resolved on the pinned PATH and then called by that
 # path, so what was checked is what runs.
-for v in S3CMD:s3cmd TAR:tar GZIP:gzip TEE:tee TAIL:tail SHA256SUM:sha256sum; do
+for v in S3CMD:s3cmd TAR:tar GZIP:gzip SPLIT:split TEE:tee TAIL:tail SHA256SUM:sha256sum; do
   exe=$(command -v "${v#*:}") || die "missing executable on PATH: ${v#*:}" 1
   printf -v "${v%%:*}" '%s' "$exe"
 done
@@ -139,7 +146,7 @@ stream_ok() { # key floor sizefile sumfile exit-code -> sets size and sum
 log "start$DRY $prefix"
 
 # --- SQL dump -------------------------------------------------------------
-# Streamed: mysqldump | tee(tail) | gzip | tee(count, hash) | s3cmd. The tail
+# Streamed: mysqldump | tee(tail) | split+gzip | tee(count, hash) | s3cmd. The tail
 # of the uncompressed dump carries mysqldump's completion marker.
 # No --single-transaction: the DB holds MyISAM tables (ext_TableEdit_*,
 # searchindex); the default --lock-tables read-locks the whole database for
@@ -150,27 +157,27 @@ log "start$DRY $prefix"
 sqlkey=sqldump-$prefix.sql.gz
 HOME=$WORK "$MYSQLDUMP" --defaults-file="$MYCNF" --no-tablespaces --comments --dump-date "$DB" \
   | "$TEE" >("$TAIL" -c 200 > "$WORK/sql.tail") \
-  | "$GZIP" -c \
+  | "$SPLIT" -b "$CHUNK" --filter="$GZIP -c" \
   | "$TEE" >(wc -c > "$WORK/sql.size") >("$SHA256SUM" | awk '{print $1}' > "$WORK/sql.sum") \
   | upload - "$sqlkey"
 st=("${PIPESTATUS[@]}")
-pipeline_ok 2 mysqldump tee gzip tee "upload of $sqlkey"
+pipeline_ok 2 mysqldump tee "split|gzip" tee "upload of $sqlkey"
 wait_for "$WORK/sql.tail" && grep -q -- '^-- Dump completed' "$WORK/sql.tail" \
   || die "mysqldump output tail missing or without the completion marker" 2
 stream_ok "$sqlkey" "$MIN_SQL_BYTES" "$WORK/sql.size" "$WORK/sql.sum" 2
 sql_size=$size sql_sum=$sum
 
 # --- Wiki files -----------------------------------------------------------
-# Streamed: tar | gzip | tee(count, hash) | s3cmd. Absolute path, not
+# Streamed: tar | split+gzip | tee(count, hash) | s3cmd. Absolute path, not
 # "-C /": / and /home are traverse-only (--x) on the host and tar -C must
 # open the directory. tar strips the leading "/" (one stderr notice), so
 # member names stay home/geneontology/www/... as with the old script.
 wikikey=wikidump-$prefix.tar.gz
-"$TAR" cf - "$TOP_LEVEL/www" | "$GZIP" -c \
+"$TAR" cf - "$TOP_LEVEL/www" | "$SPLIT" -b "$CHUNK" --filter="$GZIP -c" \
   | "$TEE" >(wc -c > "$WORK/wiki.size") >("$SHA256SUM" | awk '{print $1}' > "$WORK/wiki.sum") \
   | upload - "$wikikey"
 st=("${PIPESTATUS[@]}")
-pipeline_ok 4 "tar of $TOP_LEVEL/www" gzip tee "upload of $wikikey"
+pipeline_ok 4 "tar of $TOP_LEVEL/www" "split|gzip" tee "upload of $wikikey"
 stream_ok "$wikikey" "$MIN_WIKI_BYTES" "$WORK/wiki.size" "$WORK/wiki.sum" 4
 wiki_size=$size wiki_sum=$sum
 
