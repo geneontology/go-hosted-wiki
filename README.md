@@ -1,8 +1,14 @@
 # Restoring Mediawiki
 
-> **Before running the manual backup, read [#2](https://github.com/geneontology/go-hosted-wiki/issues/2):**
-> the cron-pushed `wikidump-*` files backups are truncated every month, so the manual
-> backup below is the only complete copy of the wiki files. Keep doing it until #2 is closed.
+> **Automated backups ([#2](https://github.com/geneontology/go-hosted-wiki/issues/2)):** since
+> 2026-10-04 the host's monthly cron (`cron/create_dumps.sh`) pushes complete backups. A good
+> month leaves three objects with one prefix in the backup bucket:
+> `sqldump-<prefix>.sql.gz` (plain gzipped SQL: `gunzip -c sqldump-….sql.gz | mysql …`),
+> `wikidump-<prefix>.tar.gz` (members `home/geneontology/www/…`, same layout as the manual
+> files backup) and `backup-<prefix>.ok` (sha256, size and key of both). **A pair without its
+> `.ok` is a failed run.** Cron objects before 2026-10 have truncated `wikidump-*` files:
+> the host's cron kills any process after 60 s of CPU, and the old script's single `gzip`
+> needed more. The manual backup below continues until it is formally retired.
 
 This is to test the mediawiki dumps from the hosting service.
 
