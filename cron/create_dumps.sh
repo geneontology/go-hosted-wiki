@@ -29,19 +29,25 @@
 #       into one valid .gz. Any process that must touch the whole stream has
 #       to stay well under 60 s of CPU.
 # CAVEAT: never stage a dump on local disk.
-# CAVEAT: the panel cron starts this with SIGPIPE ignored (inherited; bash
-#       cannot reset it). When an upload stage dies, the stages before it run
-#       on to EOF and report 0, so "pipeline 0 0 0 0 11" means the upload
-#       alone failed, and the FAILED line lands when the dump finishes, not
-#       when s3cmd died (2026-11-01). s3cmd's stderr is kept in $WORK and
-#       quoted in the FAILED line: the log, not only the cron mail, says why.
+# CAVEAT: split --filter runs its command through "$SHELL -c". Under the
+#       panel's scheduled cron $SHELL is the panel's perl cron-shell, which
+#       captures the command's stdout and MAILS it (NOTIFY=output) instead of
+#       passing it on; the panel's Run button sets NOTIFY=bare, where it
+#       prints, so Run-button tests pass and the scheduled run fails. That
+#       is the 2026-11-01 failure: gzip's output went to mail, an empty
+#       stream reached s3cmd, which completed an upload with no parts (400
+#       MalformedXML). SHELL is pinned below. s3cmd's stderr is kept in
+#       $WORK and quoted in the FAILED line, so the log says why.
+# CAVEAT: the Run button starts this with SIGPIPE ignored (the scheduled cron
+#       does not): after a dead upload stage the earlier stages run on to
+#       EOF and report 0, and the FAILED line lands when the dump finishes.
 # CAVEAT: any nonzero tar exit, including 1 ("file changed as we read it"),
 #       fails the run on purpose; none has occurred at the cron hour so far.
 #
 # INSTALL s3cmd: apt-get update && apt-get install -y s3cmd
 
 set -uo pipefail
-export PATH=/usr/local/bin:/usr/bin:/bin LC_ALL=C
+export PATH=/usr/local/bin:/usr/bin:/bin LC_ALL=C SHELL=/bin/bash   # SHELL: see CAVEAT
 umask 077
 
 BUCKET=REPLACE_ME
