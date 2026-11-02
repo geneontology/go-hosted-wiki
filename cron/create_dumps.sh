@@ -29,6 +29,12 @@
 #       into one valid .gz. Any process that must touch the whole stream has
 #       to stay well under 60 s of CPU.
 # CAVEAT: never stage a dump on local disk.
+# CAVEAT: the panel cron starts this with SIGPIPE ignored (inherited; bash
+#       cannot reset it). When an upload stage dies, the stages before it run
+#       on to EOF and report 0, so "pipeline 0 0 0 0 11" means the upload
+#       alone failed, and the FAILED line lands when the dump finishes, not
+#       when s3cmd died (2026-11-01). s3cmd's stderr is kept in $WORK and
+#       quoted in the FAILED line: the log, not only the cron mail, says why.
 # CAVEAT: any nonzero tar exit, including 1 ("file changed as we read it"),
 #       fails the run on purpose; none has occurred at the cron hour so far.
 #
@@ -64,7 +70,16 @@ MYSQLDUMP=/usr/local/bin/mysqldump
 DRY=""; [ "$DRYRUN" = 1 ] && DRY=" (dryrun)"
 log() { echo "$(date +%FT%T%z) $*" | tee -a "$LOG" >&2; }
 died=0
-die() { died=1; log "FAILED$DRY: $1"; exit "${2:-1}"; }   # $2 = exit code
+die() { # message [exit code]; quotes s3cmd's error lines, if any, and replays its stderr
+  local s3err=""
+  died=1
+  if [ -n "$WORK" ] && [ -s "$WORK/s3cmd.err" ]; then
+    s3err="; s3cmd: $(grep -E 'ERROR|WARNING|failed' "$WORK/s3cmd.err" | tr '\n' '|' | cut -c1-600)"
+    cat "$WORK/s3cmd.err" >&2
+  fi
+  log "FAILED$DRY: $1$s3err"
+  exit "${2:-1}"
+}
 WORK=""
 # EXIT: remove the counter files, and log an exit that no die() announced (an
 # unbound variable under set -u, a bash error) so every nonzero exit leaves a line.
@@ -110,7 +125,7 @@ s3_size() { # key -> byte size of the object in S3, or empty (needs s3:ListBucke
 }
 upload() { # src(- for stdin) key
   if [ "$DRYRUN" = 1 ]; then cat "$1" > /dev/null; echo "dryrun: skipped upload of $2" >&2; return 0; fi
-  "$S3CMD" -c "$S3_CFG" --no-progress put "$1" "s3://$BUCKET/$2"
+  "$S3CMD" -c "$S3_CFG" --no-progress put "$1" "s3://$BUCKET/$2" 2>>"$WORK/s3cmd.err"
 }
 wait_for() { # file... -> each non-empty within 30 s (process-substitution writers)
   local f
@@ -192,5 +207,6 @@ if [ "$DRYRUN" != 1 ]; then
   [ -n "$remote_size" ] && [ "$ok_size" = "$remote_size" ] || die "$okkey size mismatch local=$ok_size s3=${remote_size:-none}" 5
 fi
 
+[ -s "$WORK/s3cmd.err" ] && cat "$WORK/s3cmd.err" >&2   # warnings of a successful run still reach the cron mail
 log "done$DRY $prefix"
 exit 0
